@@ -59,23 +59,8 @@ class DevelopmentConfig(Config):
 class ProductionConfig(Config):
     DEBUG = False
     TESTING = False
-
-    # In production, require proper secrets (not auto-generated)
-    @property
-    def SECRET_KEY(self):
-        key = os.getenv("SECRET_KEY")
-        if not key:
-            raise ValueError(
-                "SECRET_KEY environment variable must be set in production")
-        return key
-
-    @property
-    def JWT_SECRET_KEY(self):
-        key = os.getenv("JWT_SECRET_KEY")
-        if not key:
-            raise ValueError(
-                "JWT_SECRET_KEY environment variable must be set in production")
-        return key
+    # SECRET_KEY and JWT_SECRET_KEY are inherited from Config
+    # which uses _secret_env() to get from environment or generate a fallback
 
 
 class TestingConfig(Config):
