@@ -38,17 +38,20 @@ def create_app(config_name: str | None = None) -> Flask:
     jwt.init_app(app)
 
     # Auto-create tables on startup (for Render free tier without shell access)
-    with app.app_context():
-        db.create_all()
-        # Auto-seed admin if not exists
-        from .models import User
-        admin = User.query.filter_by(email="admin@example.com").first()
-        if not admin:
-            admin = User(email="admin@example.com", role="admin")
-            admin.set_password("Admin@123")
-            db.session.add(admin)
-            db.session.commit()
-            app.logger.info("Created default admin user: admin@example.com")
+    try:
+        with app.app_context():
+            db.create_all()
+            # Auto-seed admin if not exists
+            from .models import User
+            admin = User.query.filter_by(email="admin@example.com").first()
+            if not admin:
+                admin = User(email="admin@example.com", role="admin")
+                admin.set_password("Admin@123")
+                db.session.add(admin)
+                db.session.commit()
+                app.logger.info("Created default admin user: admin@example.com")
+    except Exception as e:
+        app.logger.error(f"Database initialization error: {e}")
 
     # Configure logging
     configure_logging(app)
@@ -67,6 +70,7 @@ def create_app(config_name: str | None = None) -> Flask:
             "name": "HFRAT API",
             "version": "1.0.0",
             "status": "running",
+            "environment": env,
             "endpoints": {
                 "auth": "/api/auth",
                 "admin": "/api/admin",
@@ -78,7 +82,18 @@ def create_app(config_name: str | None = None) -> Flask:
 
     @app.get("/health")
     def health_check():
-        return {"status": "ok", "environment": env}
+        try:
+            # Test database connection
+            db.session.execute(db.text("SELECT 1"))
+            db_status = "connected"
+        except Exception as e:
+            db_status = f"error: {str(e)}"
+        
+        return {
+            "status": "ok",
+            "environment": env,
+            "database": db_status
+        }
 
     return app
 
