@@ -37,6 +37,19 @@ def create_app(config_name: str | None = None) -> Flask:
     migrate.init_app(app, db)
     jwt.init_app(app)
 
+    # Auto-create tables on startup (for Render free tier without shell access)
+    with app.app_context():
+        db.create_all()
+        # Auto-seed admin if not exists
+        from .models import User
+        admin = User.query.filter_by(email="admin@example.com").first()
+        if not admin:
+            admin = User(email="admin@example.com", role="admin")
+            admin.set_password("Admin@123")
+            db.session.add(admin)
+            db.session.commit()
+            app.logger.info("Created default admin user: admin@example.com")
+
     # Configure logging
     configure_logging(app)
 
