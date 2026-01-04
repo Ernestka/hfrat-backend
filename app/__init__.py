@@ -49,7 +49,8 @@ def create_app(config_name: str | None = None) -> Flask:
                 admin.set_password("Admin@123")
                 db.session.add(admin)
                 db.session.commit()
-                app.logger.info("Created default admin user: admin@example.com")
+                app.logger.info(
+                    "Created default admin user: admin@example.com")
     except Exception as e:
         app.logger.error(f"Database initialization error: {e}")
 
@@ -88,23 +89,12 @@ def create_app(config_name: str | None = None) -> Flask:
             db_status = "connected"
         except Exception as e:
             db_status = f"error: {str(e)}"
-        
+
         return {
             "status": "ok",
             "environment": env,
-            "database": db_status
-        }
-
-    return app
-
-
-def configure_logging(app: Flask) -> None:
-    """Configure application logging."""
-    if not app.debug and not app.testing:
-        # Create logs directory if it doesn't exist
-        if not os.path.exists("logs"):
-            os.mkdir("logs")
-
+            "database": db_status,
+            "cors_origins": app.config.get("CORS_ORIGINS", [])
         # File handler for application logs
         file_handler = RotatingFileHandler(
             "logs/hfrat.log", maxBytes=10240000, backupCount=10
