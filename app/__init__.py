@@ -29,7 +29,7 @@ def create_app(config_name: str | None = None) -> Flask:
     if env == "production":
         if "https://hfrat.netlify.app" not in allowed_origins:
             allowed_origins = list(allowed_origins) + \
-                                   ["https://hfrat.netlify.app"]
+                ["https://hfrat.netlify.app"]
 
     cors.init_app(app, resources={
         r"/api/*": {
@@ -134,7 +134,7 @@ def configure_logging(app: Flask) -> None:
 
 def register_security_middleware(app: Flask) -> None:
     """Register middleware for security headers."""
-    @ app.after_request
+    @app.after_request
     def add_security_headers(response):
         """Add security headers to all responses."""
         # Prevent clickjacking
@@ -155,7 +155,7 @@ def register_security_middleware(app: Flask) -> None:
 
         return response
 
-    @ app.before_request
+    @app.before_request
     def log_request_info():
         """Log incoming request information."""
         if not app.debug:
@@ -171,7 +171,7 @@ def register_security_middleware(app: Flask) -> None:
 def register_error_handlers(app: Flask) -> None:
     """Register global error handlers."""
 
-    @ app.errorhandler(400)
+    @app.errorhandler(400)
     def bad_request(error):
         """Handle 400 Bad Request errors."""
         app.logger.warning("Bad request: %s", str(error))
@@ -179,13 +179,13 @@ def register_error_handlers(app: Flask) -> None:
             error, "description") else "Bad request"
         return jsonify({"error": message}), 400
 
-    @ app.errorhandler(401)
+    @app.errorhandler(401)
     def unauthorized(error):
         """Handle 401 Unauthorized errors."""
         app.logger.warning("Unauthorized access attempt: %s", str(error))
         return jsonify({"error": "Unauthorized. Please log in."}), 401
 
-    @ app.errorhandler(403)
+    @app.errorhandler(403)
     def forbidden(error):
         """Handle 403 Forbidden errors."""
         app.logger.warning(
@@ -195,13 +195,13 @@ def register_error_handlers(app: Flask) -> None:
         )
         return jsonify({"error": "Forbidden. You don't have permission to access this resource."}), 403
 
-    @ app.errorhandler(404)
+    @app.errorhandler(404)
     def not_found(error):
         """Handle 404 Not Found errors."""
         app.logger.info("Resource not found: %s", request.path)
         return jsonify({"error": "Resource not found."}), 404
 
-    @ app.errorhandler(500)
+    @app.errorhandler(500)
     def internal_server_error(error):
         """Handle 500 Internal Server errors."""
         app.logger.error(
@@ -213,13 +213,13 @@ def register_error_handlers(app: Flask) -> None:
         db.session.rollback()  # Rollback any failed database transactions
         return jsonify({"error": "Internal server error. Please try again later."}), 500
 
-    @ app.errorhandler(JWTExtendedException)
+    @app.errorhandler(JWTExtendedException)
     def handle_jwt_error(error):
         """Handle JWT-specific errors."""
         app.logger.warning("JWT error: %s", str(error))
         return jsonify({"error": "Authentication failed. Please log in again."}), 401
 
-    @ app.errorhandler(SQLAlchemyError)
+    @app.errorhandler(SQLAlchemyError)
     def handle_db_error(error):
         """Handle database errors."""
         app.logger.error(
@@ -231,7 +231,7 @@ def register_error_handlers(app: Flask) -> None:
         db.session.rollback()
         return jsonify({"error": "Database error occurred. Please try again."}), 500
 
-    @ app.errorhandler(Exception)
+    @app.errorhandler(Exception)
     def handle_unexpected_error(error):
         """Handle any unexpected errors."""
         # Don't catch HTTPExceptions, let them be handled by their specific handlers
@@ -251,6 +251,6 @@ def register_error_handlers(app: Flask) -> None:
 def register_shellcontext(app: Flask) -> None:
     from .models import Facility, ResourceReport, User
 
-    @ app.shell_context_processor
+    @app.shell_context_processor
     def shell_context():
         return {"db": db, "User": User, "Facility": Facility, "ResourceReport": ResourceReport}
