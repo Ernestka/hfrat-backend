@@ -23,17 +23,18 @@ def create_app(config_name: str | None = None) -> Flask:
         env, config_by_name["development"]))
 
     # Initialize extensions
-    # Build allowed origins list - always include Netlify and localhost for dev
-    allowed_origins = app.config.get("CORS_ORIGINS", [])
-    # Ensure production domains are included
-    if env == "production":
-        if "https://hfrat.netlify.app" not in allowed_origins:
-            allowed_origins = list(allowed_origins) + \
-                ["https://hfrat.netlify.app"]
+    # Build allowed origins list - always include Netlify and localhost
+    allowed_origins = set(app.config.get("CORS_ORIGINS", []))
+    allowed_origins.update({
+        "https://hfrat.netlify.app",
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "http://localhost:5174",
+    })
 
     cors.init_app(app, resources={
         r"/api/*": {
-            "origins": allowed_origins,
+            "origins": list(allowed_origins),
             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
             "allow_headers": ["Content-Type", "Authorization"],
             "expose_headers": ["Content-Type", "Authorization"],
