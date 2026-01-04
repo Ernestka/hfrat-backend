@@ -26,16 +26,18 @@ def _secret_env(name: str) -> str:
     return secrets.token_urlsafe(32)
 
 
+def _get_database_url() -> str:
+    """Get database URL, converting postgres:// to postgresql:// for SQLAlchemy."""
+    db_url = os.getenv("DATABASE_URL", "sqlite:///hfrat.db")
+    if db_url and db_url.startswith("postgres://"):
+        db_url = db_url.replace("postgres://", "postgresql://", 1)
+    return db_url
+
+
 class Config:
     ENV = os.getenv("FLASK_ENV", "development")
     SECRET_KEY = _secret_env("SECRET_KEY")
-
-    # Handle Heroku-style DATABASE_URL (postgres:// -> postgresql://)
-    _db_url = os.getenv("DATABASE_URL", "sqlite:///hfrat.db")
-    if _db_url.startswith("postgres://"):
-        _db_url = _db_url.replace("postgres://", "postgresql://", 1)
-    SQLALCHEMY_DATABASE_URI = _db_url
-
+    SQLALCHEMY_DATABASE_URI = _get_database_url()
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     JWT_SECRET_KEY = _secret_env("JWT_SECRET_KEY")
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=24)
