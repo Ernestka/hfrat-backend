@@ -28,8 +28,9 @@ def create_app(config_name: str | None = None) -> Flask:
     # Ensure production domains are included
     if env == "production":
         if "https://hfrat.netlify.app" not in allowed_origins:
-            allowed_origins = list(allowed_origins) + ["https://hfrat.netlify.app"]
-    
+            allowed_origins = list(allowed_origins) + \
+                                   ["https://hfrat.netlify.app"]
+
     cors.init_app(app, resources={
         r"/api/*": {
             "origins": allowed_origins,
@@ -102,6 +103,18 @@ def create_app(config_name: str | None = None) -> Flask:
             "environment": env,
             "database": db_status,
             "cors_origins": app.config.get("CORS_ORIGINS", [])
+        }
+
+    return app
+
+
+def configure_logging(app: Flask) -> None:
+    """Configure application logging."""
+    if not app.debug and not app.testing:
+        # Create logs directory if it doesn't exist
+        if not os.path.exists("logs"):
+            os.mkdir("logs")
+
         # File handler for application logs
         file_handler = RotatingFileHandler(
             "logs/hfrat.log", maxBytes=10240000, backupCount=10
